@@ -42,9 +42,19 @@ logger = structlog.get_logger(__name__)
 # Constants
 # --------------------------------------------------------------------------- #
 
-DEFAULT_MODEL = "gemini-2.0-flash"
+# gemini-2.5-flash: confirmed available and has separate quota pool.
+# Falls back to 2.0-flash-001 (versioned endpoint, often has separate quota).
+DEFAULT_MODEL = "gemini-2.5-flash"
 DEFAULT_TEMPERATURE = 0.1  # Low temp for factual extraction
 DEFAULT_MAX_RETRIES = 1  # One retry with stricter prompt
+
+# Fallback model order on RESOURCE_EXHAUSTED
+MODEL_FALLBACKS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite-001",
+]
+
 
 # System prompt for citation-grounded generation
 SYSTEM_PROMPT = """You are a financial research assistant that answers questions

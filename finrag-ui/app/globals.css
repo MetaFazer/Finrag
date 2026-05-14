@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ────────────────────────────────────────── */
+:root {
+  --bg-base: #0a0a0f;
+  --bg-panel: #12121a;
+  --bg-elevated: #1a1a26;
+  --border: #1e1e2e;
+  --border-active: #3b82f6;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --citation-bg: #1e3a5f;
+  --citation-text: #93c5fd;
+  --confidence-high: #22c55e;
+  --confidence-mid: #eab308;
+  --confidence-low: #ef4444;
+  --decline-bg: #1a0a0a;
+  --decline-border: #7f1d1d;
+  --decline-text: #fca5a5;
+}
+
+/* ─── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#__next, main { height: 100%; }
+
+/* ─── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── Typography helpers ───────────────────────────────────── */
+.font-mono { font-family: var(--font-mono), 'IBM Plex Mono', monospace; }
+.text-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Pulsing dot ──────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+
+/* ─── Blinking cursor ──────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink::after {
+  content: '▋';
+  font-size: 0.9em;
+  animation: blink 1s step-end infinite;
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+/* ─── Drawer animation ─────────────────────────────────────── */
+.drawer-enter { transform: translateX(100%); }
+.drawer-enter-active { transform: translateX(0); transition: transform 280ms cubic-bezier(0.22,1,0.36,1); }
+.drawer-exit { transform: translateX(0); }
+.drawer-exit-active { transform: translateX(100%); transition: transform 220ms ease-in; }
+
+/* ─── Styled select ────────────────────────────────────────── */
+.finrag-select {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 8px 10px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color 150ms;
+}
+.finrag-select:focus { border-color: var(--border-active); }
+.finrag-select option { background: #1a1a26; }
+
+/* ─── Query textarea ───────────────────────────────────────── */
+.finrag-textarea {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  padding: 14px 16px;
+  resize: none;
+  outline: none;
+  transition: border-color 200ms;
+  min-height: 56px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.finrag-textarea:focus { border-color: var(--border-active); }
+.finrag-textarea::placeholder { color: var(--text-muted); }
+
+/* ─── Answer text ──────────────────────────────────────────── */
+.answer-text {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+/* ─── Fade-in animation ────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fade-in 200ms ease-out forwards; }

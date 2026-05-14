@@ -125,10 +125,16 @@ class ChromaStore:
         if self._model is None:
             logger.info("loading_embedding_model", model=self._model_name)
             self._model = SentenceTransformer(self._model_name)
+            # API renamed in sentence-transformers 3.x
+            get_dim = getattr(
+                self._model,
+                "get_sentence_embedding_dimension",
+                getattr(self._model, "get_embedding_dimension", lambda: "unknown"),
+            )
             logger.info(
                 "embedding_model_loaded",
                 model=self._model_name,
-                embedding_dim=self._model.get_embedding_dimension(),
+                embedding_dim=get_dim(),
             )
         return self._model
 

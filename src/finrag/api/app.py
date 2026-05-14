@@ -71,6 +71,9 @@ async def lifespan(app: FastAPI):
     try:
         gen_config = load_generation_config(version=prompt_version)
         ret_config = load_retrieval_config(version=prompt_version)
+        # Store in app.state so routes can access prompt versions
+        app.state.gen_config = gen_config
+        app.state.ret_config = ret_config
         logger.info(
             "prompt_configs_loaded",
             generation_version=gen_config.version,
@@ -78,6 +81,8 @@ async def lifespan(app: FastAPI):
         )
     except Exception as e:
         logger.warning("prompt_config_load_failed", error=str(e))
+        app.state.gen_config = None
+        app.state.ret_config = None
 
     # --- Pipeline Initialization (optional) ---
     init_pipeline = os.environ.get("FINRAG_INIT_PIPELINE", "false").lower() == "true"
@@ -88,8 +93,14 @@ async def lifespan(app: FastAPI):
             from finrag.orchestration.graph import compile_rag_graph
             from finrag.retrieval.hybrid import HybridRetriever
             from finrag.retrieval.reranker import CrossEncoderReranker
+            from finrag.vectorstore.chroma_store import ChromaStore
 
-            hybrid_retriever = HybridRetriever()
+            # Build components with proper dependencies
+            chroma_store = ChromaStore()
+            hybrid_retriever = HybridRetriever(
+                chroma_store=chroma_store,
+                # BM25 index is built on-demand if no pre-built index exists
+            )
             reranker = CrossEncoderReranker()
             rag_generator = RAGGenerator()
 

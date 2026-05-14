@@ -62,10 +62,13 @@ logger = structlog.get_logger(__name__)
 MODEL_COSTS = {
     "gemini-2.0-flash": {"input": 0.0001, "output": 0.0004},
     "gemini-2.0-flash-lite": {"input": 0.00005, "output": 0.0002},
+    "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003},
+    "gemini-1.5-flash-8b": {"input": 0.0000375, "output": 0.00015},
     "gemini-2.5-pro": {"input": 0.00125, "output": 0.01},
     "gemini-2.5-flash": {"input": 0.00015, "output": 0.0006},
     "cross-encoder/ms-marco-MiniLM-L-6-v2": {"input": 0.0, "output": 0.0},
 }
+
 
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
@@ -384,6 +387,13 @@ class FinRAGTracer:
         except Exception as e:
             logger.error("langfuse_init_failed", error=str(e))
             return False
+
+    @property
+    def enabled(self) -> bool:
+        """Whether tracing is currently active and Langfuse is connected."""
+        return self._ensure_client()
+
+
 
     def start_trace(
         self,

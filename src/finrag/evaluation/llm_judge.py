@@ -214,11 +214,11 @@ class CitationJudge:
         self.model_name = model_name
         self._llm = None
 
-    def _get_llm(self):
+    def _get_llm(self):  # type: ignore[return]
         """Lazy-initialize the LLM client.
 
         Returns:
-            ChatGoogleGenerativeAI instance or None.
+            ChatGoogleGenerativeAI instance or None if API key not set.
         """
         if self._llm is not None:
             return self._llm

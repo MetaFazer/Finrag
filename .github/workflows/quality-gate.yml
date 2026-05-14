@@ -58,6 +58,7 @@ jobs:
             -v --tb=short
         env:
           FINRAG_INIT_PIPELINE: "false"
+          EDGAR_USER_AGENT: "CI ci@finrag.internal"
 
   eval-gate:
     name: Evaluation Quality Gate
@@ -86,6 +87,7 @@ jobs:
             --output ragas_report.json
         env:
           FINRAG_INIT_PIPELINE: "false"
+          EDGAR_USER_AGENT: "CI ci@finrag.internal"
 
       - name: Run LLM-as-Judge evaluation
         # CI threshold (heuristic fallback): 0.40 | Production threshold: 0.90
@@ -97,6 +99,7 @@ jobs:
             --output judge_report.json
         env:
           FINRAG_INIT_PIPELINE: "false"
+          EDGAR_USER_AGENT: "CI ci@finrag.internal"
 
       - name: Upload evaluation reports
         if: always()
@@ -106,6 +109,7 @@ jobs:
           path: |
             ragas_report.json
             judge_report.json
+
 
   integration:
     name: Integration Test
@@ -130,3 +134,4 @@ jobs:
             -v --tb=short
         env:
           FINRAG_INIT_PIPELINE: "false"
+          EDGAR_USER_AGENT: "CI ci@finrag.internal"
