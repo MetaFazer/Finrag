@@ -14,21 +14,20 @@ Design decisions:
 import asyncio
 import json
 import re
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-
-import warnings
 
 import httpx
 import structlog
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
+from finrag.config import Settings
+
 # Suppress BS4 warning when lxml encounters XML-structured EDGAR filings.
 # The parser works correctly regardless — this is a false-positive warning.
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-
-from finrag.config import Settings
 
 logger = structlog.get_logger(__name__)
 
