@@ -89,6 +89,9 @@ class CrossEncoderReranker:
 
         # Lazy-load the model (heavy — ~90MB)
         self._model: CrossEncoder | None = None
+        
+        # Eagerly load the reranker model to avoid blocking the first request
+        self._get_model()
 
         logger.info(
             "reranker_initialized",

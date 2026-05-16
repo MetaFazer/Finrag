@@ -89,17 +89,49 @@ async def lifespan(app: FastAPI):
 
     if init_pipeline:
         try:
+            from pathlib import Path
+
+            from finrag.ingestion.chunker import chunk_filing_directory
             from finrag.orchestration.generator import RAGGenerator
             from finrag.orchestration.graph import compile_rag_graph
+            from finrag.retrieval.bm25_index import BM25Index
             from finrag.retrieval.hybrid import HybridRetriever
             from finrag.retrieval.reranker import CrossEncoderReranker
             from finrag.vectorstore.chroma_store import ChromaStore
 
-            # Build components with proper dependencies
+            # Build ChromaDB vector store
             chroma_store = ChromaStore()
+
+            # Build BM25 index from all raw filing directories
+            raw_dir = Path("./data/raw")
+            bm25_index = BM25Index()
+            if raw_dir.exists():
+                filing_dirs = [
+                    d for d in sorted(raw_dir.iterdir())
+                    if d.is_dir() and (d / "metadata.json").exists()
+                ]
+                if filing_dirs:
+                    all_chunks = []
+                    for filing_dir in filing_dirs:
+                        all_chunks.extend(chunk_filing_directory(filing_dir))
+                    if all_chunks:
+                        bm25_index.add_chunks(all_chunks)
+                        logger.info(
+                            "bm25_index_built_from_raw",
+                            filing_count=len(filing_dirs),
+                            chunk_count=len(all_chunks),
+                        )
+                    else:
+                        logger.warning("no_chunks_for_bm25", raw_dir=str(raw_dir))
+                else:
+                    logger.warning("no_filing_dirs_found", raw_dir=str(raw_dir))
+            else:
+                logger.warning("raw_dir_not_found", raw_dir=str(raw_dir))
+
+            # Build hybrid retriever with both indexes
             hybrid_retriever = HybridRetriever(
                 chroma_store=chroma_store,
-                # BM25 index is built on-demand if no pre-built index exists
+                bm25_index=bm25_index,
             )
             reranker = CrossEncoderReranker()
             rag_generator = RAGGenerator()
@@ -162,16 +194,6 @@ def create_app(
         lifespan=lifespan,
     )
 
-    # --- CORS ---
-    allowed_origins = os.environ.get("FINRAG_CORS_ORIGINS", "*").split(",")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
     # --- Middleware Stack ---
     # Applied in reverse: last add_middleware is outermost.
     if enable_rate_limit:
@@ -186,6 +208,17 @@ def create_app(
 
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(LoggingMiddleware)
+
+    # --- CORS ---
+    # Add CORS last so it is the outermost middleware.
+    allowed_origins = os.environ.get("FINRAG_CORS_ORIGINS", "*").split(",")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # --- Routes ---
     app.include_router(api_router)

@@ -50,15 +50,15 @@ DECLINE_PATTERNS: list[re.Pattern] = [
 # Patterns indicating the query needs numerical computation after
 # retrieval, not just text generation. These queries require extracting
 # numbers from chunks and performing calculations or comparisons.
+# NOTE: Keep this list tight — false positives send factual questions
+# through the calculate path which has stricter citation enforcement.
 CALCULATE_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(compare|comparison|versus|vs\.?)\b", re.IGNORECASE),
     re.compile(r"\b(higher|lower|greater|less|more|fewer)\s+than\b", re.IGNORECASE),
     re.compile(r"\b(increase|decrease|change|differ)\s+(by|in|from)\b", re.IGNORECASE),
-    re.compile(r"\b(percentage|percent|ratio|multiple)\b", re.IGNORECASE),
-    re.compile(r"\b(calculate|compute|sum|total|average|mean)\b", re.IGNORECASE),
     re.compile(r"\b(year.over.year|yoy|quarter.over.quarter|qoq)\b", re.IGNORECASE),
     re.compile(r"\b(growth\s+rate|cagr|margin\s+change)\b", re.IGNORECASE),
-    re.compile(r"\b(how\s+much\s+did)\b", re.IGNORECASE),
+    re.compile(r"\b(how\s+much\s+did\s+.{0,30}\s+(change|grow|decline|increase|decrease))\b", re.IGNORECASE),
 ]
 
 

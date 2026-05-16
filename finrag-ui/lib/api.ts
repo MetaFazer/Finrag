@@ -1,8 +1,9 @@
 import type { Citation, QueryFilters, QueryResponse, PipelineStage } from "./types";
 import { PIPELINE_STAGES } from "./constants";
 
-// CONFIG — move to .env
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
+// Use a same-origin Next.js proxy route to avoid CORS + IPv6/IPv4 issues.
+// The proxy forwards to the FastAPI backend server-side.
+const PROXY_ENDPOINT = "/api/query";
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
 
 // Set to true to simulate SSE without a live backend
@@ -13,6 +14,7 @@ const MOCK_MODE = false;
 
 export async function checkHealth(): Promise<boolean> {
   try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8002";
     const res = await fetch(`${API_URL}/healthz`, {
       signal: AbortSignal.timeout(5000),
     });
@@ -55,21 +57,19 @@ function runLiveStream(
   callbacks: StreamCallbacks
 ): void {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
+  const timeout = setTimeout(() => controller.abort(), 120_000);
 
-  // Build metadata_filter from UI filters
+  // Build metadata_filter from UI filters to match backend ChromaDB schema
   const metadata_filter: Record<string, string> = {
     ticker: filters.ticker,
-    filing_type: filters.filing_type,
-    fiscal_period: filters.fiscal_period,
+    form_type: filters.filing_type,
   };
 
-  fetch(`${API_URL}/api/v1/query/stream`, {
+  fetch(PROXY_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      // Backend uses Bearer token auth (not X-API-Key header)
-      Authorization: `Bearer ${API_KEY}`,
+      // Auth is handled server-side by the Next.js proxy — no key needed in browser
       Accept: "text/event-stream",
     },
     body: JSON.stringify({ query, metadata_filter }),
@@ -145,7 +145,7 @@ function runLiveStream(
     })
     .catch((err: Error) => {
       if (err.name === "AbortError") {
-        callbacks.onError("Request timed out after 30 seconds.");
+        callbacks.onError("Request timed out after 120 seconds.");
       } else {
         callbacks.onError(`Connection failed: ${err.message}`);
       }

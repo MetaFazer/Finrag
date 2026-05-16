@@ -16,7 +16,9 @@ Design decisions:
   "AAPL 10-K FY2024, Item 7 - MD&A". Constructed from chunk metadata.
 """
 
-from pydantic import BaseModel, Field
+from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class Citation(BaseModel):
@@ -46,14 +48,13 @@ class Citation(BaseModel):
         default="",
         description="Human-readable filing reference (e.g., 'AAPL 10-K FY2024, Item 7').",
     )
-    section: str = Field(
+    section: Optional[str] = Field(
         default="",
         description="Filing section name.",
     )
-    text_excerpt: str = Field(
+    text_excerpt: Optional[str] = Field(
         default="",
-        max_length=300,
-        description="Supporting text excerpt from the source chunk.",
+        description="Supporting text excerpt from the source chunk (truncated to 400 chars).",
     )
     relevance_score: float = Field(
         default=0.0,
@@ -61,6 +62,30 @@ class Citation(BaseModel):
         le=1.0,
         description="Reranker relevance score (0-1).",
     )
+
+    @field_validator("section", "text_excerpt", mode="before")
+    @classmethod
+    def coerce_none_to_str(cls, v: object) -> str:
+        """Convert None to empty string to avoid validation errors."""
+        if v is None:
+            return ""
+        return str(v)
+
+    @field_validator("text_excerpt", mode="after")
+    @classmethod
+    def truncate_excerpt(cls, v: str) -> str:
+        """Truncate long excerpts instead of hard-failing."""
+        return v[:400] if len(v) > 400 else v
+
+    @field_validator("relevance_score", mode="before")
+    @classmethod
+    def clamp_score(cls, v: object) -> float:
+        """Clamp relevance_score to [0, 1] range."""
+        try:
+            f = float(v)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return 0.0
+        return max(0.0, min(1.0, f))
 
 
 class CitedAnswer(BaseModel):

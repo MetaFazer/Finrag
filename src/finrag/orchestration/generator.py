@@ -42,17 +42,17 @@ logger = structlog.get_logger(__name__)
 # Constants
 # --------------------------------------------------------------------------- #
 
-# gemini-2.5-flash: confirmed available and has separate quota pool.
-# Falls back to 2.0-flash-001 (versioned endpoint, often has separate quota).
-DEFAULT_MODEL = "gemini-2.5-flash"
+# gemini-2.5-flash-lite: fast, separate quota pool from 2.0-flash.
+# Confirmed available on current API key.
+DEFAULT_MODEL = "gemini-2.5-flash-lite"
 DEFAULT_TEMPERATURE = 0.1  # Low temp for factual extraction
 DEFAULT_MAX_RETRIES = 1  # One retry with stricter prompt
 
 # Fallback model order on RESOURCE_EXHAUSTED
 MODEL_FALLBACKS = [
-    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
     "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite-001",
 ]
 
 
@@ -299,6 +299,10 @@ class RAGGenerator:
     ) -> CitedAnswer:
         """Call the LLM and parse the response into CitedAnswer.
 
+        Bypasses LangChain to call the Gemini REST API directly to avoid
+        a known issue where with_structured_output hangs indefinitely.
+        Uses curl via subprocess to bypass Python urllib3 TLS/IPv6 deadlocks.
+
         Args:
             query: User's question.
             context: Formatted context string.
@@ -307,7 +311,16 @@ class RAGGenerator:
         Returns:
             Parsed CitedAnswer from LLM response.
         """
-        llm = self._get_llm()
+        import json
+        import subprocess
+        
+        if not self._api_key:
+            return CitedAnswer(
+                answer_text="Generation failed: Missing API Key",
+                citations=[],
+                confidence=0.0,
+                reasoning="No API key provided."
+            )
 
         # Build prompt
         system = SYSTEM_PROMPT
@@ -315,32 +328,62 @@ class RAGGenerator:
             system += RETRY_PROMPT_SUFFIX.format(errors=retry_errors)
 
         user_message = (
-            f"QUESTION: {query}\n\nCONTEXT:\n{context}\n\nGenerate a cited answer using ONLY the context above."
+            f"QUESTION: {query}\n\nCONTEXT:\n{context}\n\nGenerate a cited answer using ONLY the context above. RETURN ONLY VALID JSON MATCHING THE SCHEMA."
         )
 
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self._model_name}:generateContent?key={self._api_key}"
+        
+        payload = {
+            "system_instruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+            "generationConfig": {
+                "temperature": self._temperature,
+                "response_mime_type": "application/json"
+            }
+        }
+
         try:
-            # Use structured output via with_structured_output
-            structured_llm = llm.with_structured_output(CitedAnswer)
-            result = structured_llm.invoke(
-                [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user_message},
-                ]
+            # Use curl to avoid Python networking hangs in this specific environment
+            result = subprocess.run(
+                ["curl", "-s", "-X", "POST", url, "-H", "Content-Type: application/json", "-d", json.dumps(payload)],
+                capture_output=True,
+                text=True,
+                timeout=60
             )
+            
+            if result.returncode != 0:
+                raise RuntimeError(f"curl failed: {result.stderr}")
+                
+            data = json.loads(result.stdout)
+            
+            if "error" in data:
+                raise ValueError(f"API Error: {data['error'].get('message', 'Unknown error')}")
+            
+            if "candidates" not in data or not data["candidates"]:
+                raise ValueError(f"No candidates returned from API. Response: {data}")
+                
+            json_text = data["candidates"][0]["content"]["parts"][0]["text"]
+            
+            # The LLM might wrap the JSON in markdown formatting block
+            if json_text.startswith("```json"):
+                json_text = json_text.replace("```json\n", "").replace("\n```", "")
+            elif json_text.startswith("```"):
+                json_text = json_text.replace("```\n", "").replace("\n```", "")
+                
+            answer_result = CitedAnswer.model_validate_json(json_text)
 
             logger.info(
                 "llm_call_complete",
                 model=self._model_name,
-                confidence=result.confidence,
-                citations=len(result.citations),
+                confidence=answer_result.confidence,
+                citations=len(answer_result.citations),
                 is_retry=retry_errors is not None,
             )
 
-            return result
+            return answer_result
 
         except Exception as e:
             logger.error("llm_call_failed", error=str(e))
-            # Return a low-confidence answer on failure
             return CitedAnswer(
                 answer_text=f"Generation failed: {e}",
                 citations=[],

@@ -329,6 +329,10 @@ class HybridRetriever:
         if not query.strip():
             return []
 
+        # Convert flat where filter to ChromaDB $and syntax if needed
+        if where and len(where) > 1 and "$and" not in where and "$or" not in where:
+            where = {"$and": [{k: v} for k, v in where.items()]}
+
         # Step 1: Determine query variants
         if use_multi_query:
             queries = self._multi_query_fn(query)

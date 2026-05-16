@@ -103,6 +103,9 @@ class ChromaStore:
             existing_count=self._collection.count(),
         )
 
+        # Eagerly load the embedding model to avoid blocking the first request
+        self._get_model()
+
     @property
     def collection_name(self) -> str:
         """Name of the active ChromaDB collection."""
