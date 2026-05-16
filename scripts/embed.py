@@ -126,10 +126,7 @@ def main() -> None:
             logger.error("raw_directory_not_found", path=str(raw_dir))
             sys.exit(1)
 
-        filing_dirs = [
-            d for d in sorted(raw_dir.iterdir())
-            if d.is_dir() and (d / "metadata.json").exists()
-        ]
+        filing_dirs = [d for d in sorted(raw_dir.iterdir()) if d.is_dir() and (d / "metadata.json").exists()]
 
         if not filing_dirs:
             logger.warning("no_filings_found", directory=str(raw_dir))

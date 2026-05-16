@@ -313,13 +313,13 @@ class RAGGenerator:
         """
         import json
         import subprocess
-        
+
         if not self._api_key:
             return CitedAnswer(
                 answer_text="Generation failed: Missing API Key",
                 citations=[],
                 confidence=0.0,
-                reasoning="No API key provided."
+                reasoning="No API key provided.",
             )
 
         # Build prompt
@@ -328,18 +328,17 @@ class RAGGenerator:
             system += RETRY_PROMPT_SUFFIX.format(errors=retry_errors)
 
         user_message = (
-            f"QUESTION: {query}\n\nCONTEXT:\n{context}\n\nGenerate a cited answer using ONLY the context above. RETURN ONLY VALID JSON MATCHING THE SCHEMA."
+            f"QUESTION: {query}\n\nCONTEXT:\n{context}\n\n"
+            f"Generate a cited answer using ONLY the context above. "
+            f"RETURN ONLY VALID JSON MATCHING THE SCHEMA."
         )
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self._model_name}:generateContent?key={self._api_key}"
-        
+
         payload = {
             "system_instruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": user_message}]}],
-            "generationConfig": {
-                "temperature": self._temperature,
-                "response_mime_type": "application/json"
-            }
+            "generationConfig": {"temperature": self._temperature, "response_mime_type": "application/json"},
         }
 
         try:
@@ -348,28 +347,28 @@ class RAGGenerator:
                 ["curl", "-s", "-X", "POST", url, "-H", "Content-Type: application/json", "-d", json.dumps(payload)],
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
-            
+
             if result.returncode != 0:
                 raise RuntimeError(f"curl failed: {result.stderr}")
-                
+
             data = json.loads(result.stdout)
-            
+
             if "error" in data:
                 raise ValueError(f"API Error: {data['error'].get('message', 'Unknown error')}")
-            
+
             if "candidates" not in data or not data["candidates"]:
                 raise ValueError(f"No candidates returned from API. Response: {data}")
-                
+
             json_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            
+
             # The LLM might wrap the JSON in markdown formatting block
             if json_text.startswith("```json"):
                 json_text = json_text.replace("```json\n", "").replace("\n```", "")
             elif json_text.startswith("```"):
                 json_text = json_text.replace("```\n", "").replace("\n```", "")
-                
+
             answer_result = CitedAnswer.model_validate_json(json_text)
 
             logger.info(

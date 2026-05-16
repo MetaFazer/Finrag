@@ -70,7 +70,6 @@ MODEL_COSTS = {
 }
 
 
-
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     """Estimate USD cost for a model invocation.
 
@@ -392,8 +391,6 @@ class FinRAGTracer:
     def enabled(self) -> bool:
         """Whether tracing is currently active and Langfuse is connected."""
         return self._ensure_client()
-
-
 
     def start_trace(
         self,

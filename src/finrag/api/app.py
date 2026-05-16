@@ -106,10 +106,7 @@ async def lifespan(app: FastAPI):
             raw_dir = Path("./data/raw")
             bm25_index = BM25Index()
             if raw_dir.exists():
-                filing_dirs = [
-                    d for d in sorted(raw_dir.iterdir())
-                    if d.is_dir() and (d / "metadata.json").exists()
-                ]
+                filing_dirs = [d for d in sorted(raw_dir.iterdir()) if d.is_dir() and (d / "metadata.json").exists()]
                 if filing_dirs:
                     all_chunks = []
                     for filing_dir in filing_dirs:

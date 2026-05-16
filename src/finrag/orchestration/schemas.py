@@ -16,8 +16,6 @@ Design decisions:
   "AAPL 10-K FY2024, Item 7 - MD&A". Constructed from chunk metadata.
 """
 
-from typing import Optional
-
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -48,11 +46,11 @@ class Citation(BaseModel):
         default="",
         description="Human-readable filing reference (e.g., 'AAPL 10-K FY2024, Item 7').",
     )
-    section: Optional[str] = Field(
+    section: str | None = Field(
         default="",
         description="Filing section name.",
     )
-    text_excerpt: Optional[str] = Field(
+    text_excerpt: str | None = Field(
         default="",
         description="Supporting text excerpt from the source chunk (truncated to 400 chars).",
     )
