@@ -15,6 +15,7 @@ Debt: DAY-3-001 — Using all-MiniLM-L6-v2 (384-dim). Upgrade to
       a finance-tuned model (e.g., FinBERT) for better domain recall.
 """
 
+import os
 from pathlib import Path
 
 import chromadb
@@ -76,15 +77,34 @@ class ChromaStore:
             embedding_model: HuggingFace model ID for embeddings.
         """
         self._persist_dir = Path(persist_dir)
-        self._persist_dir.mkdir(parents=True, exist_ok=True)
-
         self._collection_name = collection_name
         self._model_name = embedding_model
 
-        # Initialize ChromaDB persistent client
-        self._client = chromadb.PersistentClient(
-            path=str(self._persist_dir),
-        )
+        # Initialize ChromaDB client — cloud or local based on env vars
+        chroma_host = os.getenv("CHROMA_HOST")
+        chroma_api_key = os.getenv("CHROMA_API_KEY")
+
+        if chroma_host and chroma_api_key:
+            # Cloud deployment — ChromaDB Cloud (deploy branch)
+            self._client = chromadb.HttpClient(
+                host=chroma_host,
+                ssl=True,
+                headers={"x-chroma-token": chroma_api_key},
+            )
+            logger.info(
+                "chroma_cloud_client_initialized",
+                host=chroma_host,
+            )
+        else:
+            # Local development — PersistentClient (main branch)
+            self._persist_dir.mkdir(parents=True, exist_ok=True)
+            self._client = chromadb.PersistentClient(
+                path=str(self._persist_dir),
+            )
+            logger.info(
+                "chroma_local_client_initialized",
+                persist_dir=str(self._persist_dir),
+            )
 
         # Get or create collection (idempotent)
         self._collection = self._client.get_or_create_collection(

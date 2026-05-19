@@ -210,6 +210,10 @@ def create_app(
     # --- CORS ---
     # Add CORS last so it is the outermost middleware.
     allowed_origins = os.environ.get("FINRAG_CORS_ORIGINS", "*").split(",")
+    # Also include FRONTEND_URL if set (deploy branch — Vercel URL)
+    frontend_url = os.environ.get("FRONTEND_URL", "")
+    if frontend_url and frontend_url not in allowed_origins:
+        allowed_origins.append(frontend_url)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,

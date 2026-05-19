@@ -340,6 +340,32 @@ See [ROADMAP.md](ROADMAP.md) for full details and [DEBT_LEDGER.md](DEBT_LEDGER.m
 
 ---
 
+## Deployment
+
+This project uses a two-branch strategy:
+
+| Branch   | Purpose              | Vector Store      | Reranker Model          |
+|----------|----------------------|-------------------|-------------------------|
+| `main`   | Local development    | ChromaDB local    | MiniLM-L-6-v2           |
+| `deploy` | Cloud deployment     | ChromaDB Cloud    | MiniLM-L-2-v2           |
+
+### Live Demo
+- **Frontend:** [your-app.vercel.app](https://your-app.vercel.app)
+- **Backend:** Deployed on Render free tier
+- **Vector store:** ChromaDB Cloud free tier
+
+> **Note on cold starts:** The backend is hosted on Render's free tier.
+> If the service has been inactive, the first request may take 20–30
+> seconds to wake up. Subsequent requests are fast. This is a known
+> free-tier constraint managed with a keepalive ping every 14 minutes.
+
+### Running Locally
+Checkout `main` branch and follow the setup instructions above.
+Local setup uses a persistent ChromaDB instance and the full
+L-6 reranker model with no cold start constraints.
+
+---
+
 ## License
 
 MIT

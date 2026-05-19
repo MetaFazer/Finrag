@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: finrag-api
+    runtime: python
+    branch: deploy
+    buildCommand: pip install .
+    startCommand: uvicorn finrag.api.app:create_app --factory --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: CHROMA_HOST
+        sync: false
+      - key: CHROMA_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: FINRAG_API_KEY
+        sync: false
+      - key: FINRAG_INIT_PIPELINE
+        value: "true"
+      - key: FINRAG_CORS_ORIGINS
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: LANGFUSE_HOST
+        sync: false
+      - key: EDGAR_USER_AGENT
+        sync: false

@@ -37,7 +37,7 @@ logger = structlog.get_logger(__name__)
 # Default cross-encoder model. ms-marco-MiniLM-L-6-v2 is trained on
 # MS MARCO passage ranking, fast (~22M params), and works well for
 # general-purpose reranking. Returns raw logits, not probabilities.
-DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-2-v2"
 
 # Default number of top results to return after reranking.
 DEFAULT_TOP_K = 5
