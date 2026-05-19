@@ -1,6 +1,17 @@
+---
+title: FinRAG
+emoji: 📈
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # FinRAG
 
 > A production-grade, citation-enforced financial research assistant over SEC filings and earnings call transcripts.
+
 
 [![Quality Gate](https://github.com/MetaFazer/Finrag/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/MetaFazer/Finrag/actions/workflows/quality-gate.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
