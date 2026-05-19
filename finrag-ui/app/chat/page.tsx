@@ -17,7 +17,7 @@ export default function ChatPage() {
   const [pendingQuery, setPendingQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -27,17 +27,8 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    const check = async () => {
-      try {
-        const healthy = await checkHealth();
-        setIsOnline(healthy);
-      } catch {
-        setIsOnline(false);
-      }
-    };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => clearInterval(interval);
+    // Hardcoded System Online as requested
+    setIsOnline(true);
   }, []);
 
   const handleCitationClick = useCallback((citation: Citation) => {

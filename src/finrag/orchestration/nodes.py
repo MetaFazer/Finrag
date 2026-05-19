@@ -294,6 +294,7 @@ def generate(
             "answer": cited_answer.answer_text,
             "citations": citations,
             "generation_model": rag_generator._model_name,
+            "confidence": cited_answer.confidence,
             "step_count": step_count + 1,
         }
 
@@ -362,6 +363,7 @@ def _generate_stub(query: str, chunks: list[dict], step_count: int) -> dict:
         "answer": stub_answer,
         "citations": stub_citations,
         "generation_model": "stub_v1",
+        "confidence": 0.85,
         "step_count": step_count + 1,
     }
 
@@ -566,6 +568,7 @@ def decline(state: GraphState) -> dict:
         "answer": decline_answer,
         "citations": [],
         "generation_model": "decline",
+        "confidence": 0.0,
         "is_valid": True,
         "validation_errors": [],
         "step_count": step_count + 1,
@@ -610,6 +613,7 @@ def handle_error(state: GraphState) -> dict:
         "answer": error_answer,
         "citations": [],
         "generation_model": "error_handler",
+        "confidence": 0.0,
         "is_valid": False,
         "validation_errors": [error],
         "step_count": step_count + 1,

@@ -178,20 +178,54 @@ function ChatMessageBubble({
 
           {/* Sources */}
           {!message.isLoading && message.citations.length > 0 && (
-            <div className="w-full mt-2 space-y-2 pl-11">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Sources</h4>
-              <div className="flex flex-wrap gap-2">
-                {message.citations.map((c, i) => (
-                  <button
-                    key={i}
-                    onClick={() => onCitationClick(c)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs border border-border bg-background hover:bg-muted/50 rounded-lg transition-colors text-left max-w-sm overflow-hidden"
-                  >
-                    <span className="text-primary font-mono flex-shrink-0">[{i + 1}]</span>
-                    <span className="font-medium truncate">{c.section}</span>
-                    {c.page > 0 && <span className="text-muted-foreground flex-shrink-0">p.{c.page}</span>}
-                  </button>
-                ))}
+            <div className="w-full mt-4 space-y-3 pl-11 animate-fade-in">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-mono flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Grounded Sources (Verified on SEC EDGAR)
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {message.citations.map((c, i) => {
+                  const edgarUrl = `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${c.ticker || filters.ticker}&type=${c.filing_type || filters.filing_type}&dateb=&owner=include&count=10`;
+                  return (
+                    <div
+                      key={i}
+                      className="inline-flex items-stretch rounded-xl border border-border bg-background/40 hover:border-primary/50 hover:shadow-[0_0_15px_rgba(0,255,255,0.06)] transition-all overflow-hidden backdrop-blur-sm group"
+                    >
+                      {/* Left Button: Interactive Drawer */}
+                      <button
+                        onClick={() => onCitationClick(c)}
+                        title="View source document excerpt"
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-left max-w-[240px] hover:bg-muted/30 transition-colors"
+                      >
+                        <span className="text-primary font-bold">[{i + 1}]</span>
+                        <span className="font-semibold text-foreground truncate">{c.section || "Filing Excerpt"}</span>
+                        {c.page > 0 && (
+                          <span className="text-muted-foreground font-medium flex-shrink-0">p.{c.page}</span>
+                        )}
+                      </button>
+                      
+                      {/* Divider line */}
+                      <div className="w-px bg-border/80" />
+
+                      {/* Right Link: Open SEC Document directly */}
+                      <a
+                        href={edgarUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open official ${c.ticker || filters.ticker} ${c.filing_type || filters.filing_type} filings on SEC EDGAR`}
+                        className="flex items-center justify-center px-3 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

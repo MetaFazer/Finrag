@@ -407,6 +407,9 @@ async def query_stream_endpoint(
         route = result.get("route", "unknown")
         has_real_answer = bool(answer.strip()) and route not in ("decline", "stub", "blocked")
         effective_is_valid = has_real_answer or (route == "decline")  # decline is intentional, not an error
+        
+        # Extract dynamic confidence from LLM generation (result.get("confidence")), defaulting to 0.85
+        confidence = result.get("confidence", 0.85) if has_real_answer else 0.0
 
         yield {
             "event": "done",
@@ -418,6 +421,7 @@ async def query_stream_endpoint(
                     "is_declined": route == "decline",
                     "total_citations": len(citations),
                     "request_id": request_id,
+                    "confidence": confidence,
                 }
             ),
         }

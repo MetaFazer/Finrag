@@ -265,10 +265,12 @@ function handleNamedEvent(
       callbacks.onDecline(reason);
     }
 
+    const confidence = (data.confidence as number) ?? (isValid ? 0.85 : 0.0);
+
     callbacks.onComplete({
       answer: getAnswer(),
       citations: accumulatedCitations,
-      confidence: isValid ? 0.85 : 0.0,
+      confidence: declined ? 0.0 : confidence,
       declined,
       decline_reason: declined ? "See decline reason above." : null,
     });
